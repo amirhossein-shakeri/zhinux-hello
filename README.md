@@ -87,3 +87,24 @@ Contracts module wiring for local development:
 
 - Proto-generated package import path: `github.com/amirhossein-shakeri/zhinux-contracts/gen/go/hello/v1`
 - `go.mod` uses a local replace: `github.com/amirhossein-shakeri/zhinux-contracts => ../zhinux-contracts`
+
+Platform baseline wiring:
+
+- Shared runtime module: `github.com/amirhossein-shakeri/zhinux-platform`
+- `go.mod` uses local monorepo replace: `github.com/amirhossein-shakeri/zhinux-platform => ../zhinux-platform`
+
+## Platform Adoption Plan
+
+Use now (Phase 0/1):
+
+- `zhinux-platform/config`: typed env config with validation
+- `zhinux-platform/logging`: structured service logging baseline
+- `zhinux-platform/validation`: reusable UTF-8-safe normalization and scalar validation helpers
+
+Use at Phase 4/6 (service runtime wiring):
+
+- `zhinux-platform/grpc` + `grpc/interceptors`: runtime, request-id, timeout, recovery, logging chain
+- `zhinux-platform/telemetry`: grpc metrics interceptors + metrics handler
+- `zhinux-platform/health`: readiness/liveness handlers
+- `zhinux-platform/shutdown`: signal handling and ordered graceful stop hooks
+- `zhinux-platform/grpc.ToStatusError`: uniform transport error mapping from application errors

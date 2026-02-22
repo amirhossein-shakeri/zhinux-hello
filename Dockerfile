@@ -31,6 +31,7 @@ ENV GOFLAGS="-trimpath"
 FROM build-base AS deps
 COPY zhinux-hello/go.mod /workspace/zhinux-hello/go.mod
 COPY zhinux-contracts/go.mod /workspace/zhinux-contracts/go.mod
+COPY zhinux-platform/go.mod /workspace/zhinux-platform/go.mod
 WORKDIR /workspace/zhinux-hello
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download && go mod verify
@@ -50,6 +51,7 @@ ARG BUILD_DATE=unknown
 COPY --from=deps /go/pkg/mod /go/pkg/mod
 COPY zhinux-hello /workspace/zhinux-hello
 COPY zhinux-contracts /workspace/zhinux-contracts
+COPY zhinux-platform /workspace/zhinux-platform
 WORKDIR /workspace/zhinux-hello
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \

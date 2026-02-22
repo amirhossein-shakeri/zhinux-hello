@@ -1,9 +1,10 @@
 package greeting
 
 import (
+	"errors"
 	"fmt"
-	"strings"
-	"unicode/utf8"
+
+	platformvalidation "github.com/amirhossein-shakeri/zhinux-platform/validation"
 )
 
 type Name struct {
@@ -15,15 +16,18 @@ func NewName(rawName string, maxLength int) (Name, error) {
 		return Name{}, fmt.Errorf("%w: max name length must be greater than zero", ErrInvalidPolicy)
 	}
 
-	normalized, err := normalizeText(rawName)
+	normalized, err := platformvalidation.NormalizeText(rawName)
 	if err != nil {
+		if errors.Is(err, platformvalidation.ErrInvalidUTF8) {
+			return Name{}, ErrInvalidUTF8
+		}
 		return Name{}, err
 	}
 	if normalized == "" {
 		return Name{}, ErrNameEmpty
 	}
-	if utf8.RuneCountInString(normalized) > maxLength {
-		return Name{}, fmt.Errorf("%w: got=%d max=%d", ErrNameTooLong, utf8.RuneCountInString(normalized), maxLength)
+	if !platformvalidation.RuneCountAtMost(normalized, maxLength) {
+		return Name{}, fmt.Errorf("%w: got=%d max=%d", ErrNameTooLong, len([]rune(normalized)), maxLength)
 	}
 
 	return Name{value: normalized}, nil
@@ -42,15 +46,18 @@ func NewMessage(rawMessage string, maxLength int) (Message, error) {
 		return Message{}, fmt.Errorf("%w: max message length must be greater than zero", ErrInvalidPolicy)
 	}
 
-	normalized, err := normalizeText(rawMessage)
+	normalized, err := platformvalidation.NormalizeText(rawMessage)
 	if err != nil {
+		if errors.Is(err, platformvalidation.ErrInvalidUTF8) {
+			return Message{}, ErrInvalidUTF8
+		}
 		return Message{}, err
 	}
 	if normalized == "" {
 		return Message{}, ErrMessageEmpty
 	}
-	if utf8.RuneCountInString(normalized) > maxLength {
-		return Message{}, fmt.Errorf("%w: got=%d max=%d", ErrMessageTooLong, utf8.RuneCountInString(normalized), maxLength)
+	if !platformvalidation.RuneCountAtMost(normalized, maxLength) {
+		return Message{}, fmt.Errorf("%w: got=%d max=%d", ErrMessageTooLong, len([]rune(normalized)), maxLength)
 	}
 
 	return Message{value: normalized}, nil
@@ -65,7 +72,7 @@ type StreamCount struct {
 }
 
 func NewStreamCount(rawCount, minCount, maxCount int) (StreamCount, error) {
-	if rawCount < minCount || rawCount > maxCount {
+	if !platformvalidation.IntInRange(rawCount, minCount, maxCount) {
 		return StreamCount{}, fmt.Errorf(
 			"%w: got=%d allowed=[%d,%d]",
 			ErrStreamCountOutOfRange,
@@ -80,13 +87,4 @@ func NewStreamCount(rawCount, minCount, maxCount int) (StreamCount, error) {
 
 func (c StreamCount) Int() int {
 	return c.value
-}
-
-func normalizeText(raw string) (string, error) {
-	if !utf8.ValidString(raw) {
-		return "", ErrInvalidUTF8
-	}
-
-	normalized := strings.Join(strings.Fields(strings.TrimSpace(raw)), " ")
-	return normalized, nil
 }
